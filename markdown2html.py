@@ -10,11 +10,13 @@ import os
 def markdown_to_html(md_file, html_file):
     """
     Converts a Markdown file to an HTML file.
-    This function parses Markdown headings and unordered lists and converts them to HTML.
+    This function parses Markdown headings, unordered lists, and ordered lists, converting them to HTML.
     """
     try:
         with open(md_file, 'r') as md, open(html_file, 'w') as html:
-            in_list = False  # Flag to track if we are inside an unordered list
+            in_unordered_list = False  # Flag to track if we are inside an unordered list
+            in_ordered_list = False    # Flag to track if we are inside an ordered list
+
             for line in md:
                 # Handle Markdown headings
                 if line.startswith('#'):
@@ -22,22 +24,54 @@ def markdown_to_html(md_file, html_file):
                     content = line.strip('# \n')
                     html.write(f"<h{level}>{content}</h{level}>\n")
 
+                    # Close any open lists
+                    if in_unordered_list:
+                        html.write('</ul>\n')
+                        in_unordered_list = False
+                    if in_ordered_list:
+                        html.write('</ol>\n')
+                        in_ordered_list = False
+
                 # Handle Markdown unordered lists
                 elif line.startswith('- '):
                     content = line.strip('- \n')
-                    if not in_list:
+                    if not in_unordered_list:
                         html.write('<ul>\n')
-                        in_list = True
+                        in_unordered_list = True
                     html.write(f"    <li>{content}</li>\n")
 
-                # Check if we are exiting a list
-                elif in_list:
-                    html.write('</ul>\n')
-                    in_list = False
+                    # Close ordered list if open
+                    if in_ordered_list:
+                        html.write('</ol>\n')
+                        in_ordered_list = False
 
-            # Close the list if the file ends while inside a list
-            if in_list:
+                # Handle Markdown ordered lists
+                elif line.startswith('* '):
+                    content = line.strip('* \n')
+                    if not in_ordered_list:
+                        html.write('<ol>\n')
+                        in_ordered_list = True
+                    html.write(f"    <li>{content}</li>\n")
+
+                    # Close unordered list if open
+                    if in_unordered_list:
+                        html.write('</ul>\n')
+                        in_unordered_list = False
+
+                # Check if we are exiting a list
+                elif in_unordered_list or in_ordered_list:
+                    if in_unordered_list:
+                        html.write('</ul>\n')
+                    if in_ordered_list:
+                        html.write('</ol>\n')
+                    in_unordered_list = False
+                    in_ordered_list = False
+
+            # Close any open lists at the end of the file
+            if in_unordered_list:
                 html.write('</ul>\n')
+            if in_ordered_list:
+                html.write('</ol>\n')
 
     except IOError as e:
         print(f"Error: {e}", file=sys.stderr)
