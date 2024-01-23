@@ -10,9 +10,19 @@ import os
 def markdown_to_html(md_file, html_file):
     """
     Converts a Markdown file to an HTML file.
-    Currently, this function does not perform actual conversion.
+    This function parses Markdown headings and converts them to HTML headings.
     """
-    pass
+    try:
+        with open(md_file, 'r') as md, open(html_file, 'w') as html:
+            for line in md:
+                # Checking for Markdown headings
+                if line.startswith('#'):
+                    level = line.count('#')  # Determine the heading level
+                    content = line.strip('# \n')
+                    html.write(f"<h{level}>{content}</h{level}>\n")
+    except IOError as e:
+        print(f"Error: {e}", file=sys.stderr)
+        sys.exit(1)
 
 def main():
     """
@@ -32,7 +42,7 @@ def main():
         print(f"Missing {markdown_file}", file=sys.stderr)
         sys.exit(1)
 
-    # Call the conversion function (to be implemented)
+    # Call the conversion function
     markdown_to_html(markdown_file, html_file)
 
     # Exit successfully
