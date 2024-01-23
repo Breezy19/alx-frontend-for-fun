@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 """
-This module provides a command-line utility to convert Markdown files to HTML.
+This module provides a command-line utility to convert specific Markdown syntax to HTML.
 It requires two command-line arguments: the input Markdown file and the output HTML file.
 """
 
@@ -11,27 +11,19 @@ import hashlib
 
 def markdown_to_html(md_file, html_file):
     """
-    Converts a Markdown file to an HTML file, including parsing for headings, lists, paragraphs, bold, italic text,
-    MD5 conversion, and character removal.
+    Converts a Markdown file to an HTML file, focusing on converting content within [[...]] to its MD5 hash 
+    and removing all 'c' characters from content within ((...)). 
     """
     try:
         with open(md_file, 'r') as md, open(html_file, 'w') as html:
-            in_list = False  # Flag for any list (unordered or ordered)
-            in_paragraph = False  # Flag for paragraph
-
             for line in md:
                 # Convert content within [[...]] to its MD5 hash
                 line = re.sub(r'\[\[(.*?)\]\]', lambda m: hashlib.md5(m.group(1).encode()).hexdigest(), line)
 
                 # Remove all instances of 'c' (case-insensitive) from content within ((...))
                 line = re.sub(r'\(\((.*?)\)\)', lambda m: re.sub(r'c', '', m.group(1), flags=re.IGNORECASE), line)
-
-                # Convert Markdown bold and italic syntax to HTML
-                line = re.sub(r'\*\*(.*?)\*\*', r'<b>\1</b>', line)
-                line = re.sub(r'__(.*?)__', r'<em>\1</em>', line)
-
-                # Handle Markdown headings, lists, and paragraphs
-                # ... [existing code for handling these features] ...
+                
+                html.write(line)
 
     except IOError as e:
         print(f"Error: {e}", file=sys.stderr)
