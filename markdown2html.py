@@ -10,16 +10,35 @@ import os
 def markdown_to_html(md_file, html_file):
     """
     Converts a Markdown file to an HTML file.
-    This function parses Markdown headings and converts them to HTML headings.
+    This function parses Markdown headings and unordered lists and converts them to HTML.
     """
     try:
         with open(md_file, 'r') as md, open(html_file, 'w') as html:
+            in_list = False  # Flag to track if we are inside an unordered list
             for line in md:
-                # Checking for Markdown headings
+                # Handle Markdown headings
                 if line.startswith('#'):
                     level = line.count('#')  # Determine the heading level
                     content = line.strip('# \n')
                     html.write(f"<h{level}>{content}</h{level}>\n")
+
+                # Handle Markdown unordered lists
+                elif line.startswith('- '):
+                    content = line.strip('- \n')
+                    if not in_list:
+                        html.write('<ul>\n')
+                        in_list = True
+                    html.write(f"    <li>{content}</li>\n")
+
+                # Check if we are exiting a list
+                elif in_list:
+                    html.write('</ul>\n')
+                    in_list = False
+
+            # Close the list if the file ends while inside a list
+            if in_list:
+                html.write('</ul>\n')
+
     except IOError as e:
         print(f"Error: {e}", file=sys.stderr)
         sys.exit(1)
