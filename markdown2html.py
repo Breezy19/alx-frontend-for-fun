@@ -1,29 +1,57 @@
 #!/usr/bin/python3
 """
-This module provides a command-line utility to convert specific Markdown syntax to HTML.
-It requires two command-line arguments: the input Markdown file and the output HTML file.
+This module provides a command-line utility to convert Markdown files to HTML.
+It handles headings, unordered lists, paragraphs, bold, and italic text.
 """
 
 import sys
 import os
 import re
-import hashlib
 
 def markdown_to_html(md_file, html_file):
     """
-    Converts a Markdown file to an HTML file, focusing on converting content within [[...]] to its MD5 hash 
-    and removing all 'c' characters from content within ((...)). 
+    Converts a Markdown file to an HTML file with specified features.
     """
     try:
         with open(md_file, 'r') as md, open(html_file, 'w') as html:
-            for line in md:
-                # Convert content within [[...]] to its MD5 hash
-                line = re.sub(r'\[\[(.*?)\]\]', lambda m: hashlib.md5(m.group(1).encode()).hexdigest(), line)
+            in_paragraph = False  # Track whether we're in a paragraph
 
-                # Remove all instances of 'c' (case-insensitive) from content within ((...))
-                line = re.sub(r'\(\((.*?)\)\)', lambda m: re.sub(r'c', '', m.group(1), flags=re.IGNORECASE), line)
-                
-                html.write(line)
+            for line in md:
+                # Convert Markdown bold and italic syntax to HTML
+                line = re.sub(r'\*\*(.*?)\*\*', r'<b>\1</b>', line)
+                line = re.sub(r'__(.*?)__', r'<em>\1</em>', line)
+
+                # Handle Markdown headings
+                if line.startswith('#'):
+                    if in_paragraph:
+                        html.write('</p>\n')
+                        in_paragraph = False
+                    level = line.count('#')
+                    content = line.strip('# \n')
+                    html.write(f"<h{level}>{content}</h{level}>\n")
+
+                # Handle Markdown unordered lists
+                elif line.startswith('- '):
+                    if in_paragraph:
+                        html.write('</p>\n')
+                        in_paragraph = False
+                    content = line.strip('- \n')
+                    html.write(f"<ul>\n<li>{content}</li>\n</ul>\n")
+
+                # Handle paragraphs
+                else:
+                    if not in_paragraph and line.strip():
+                        html.write('<p>\n')
+                        in_paragraph = True
+                    if in_paragraph and line.strip():
+                        html.write(f"{line.strip()}\n")
+                    elif in_paragraph and not line.strip():
+                        html.write('</p>\n')
+                        in_paragraph = False
+
+            # Close paragraph tag if the file ends while in a paragraph
+            if in_paragraph:
+                html.write('</p>\n')
 
     except IOError as e:
         print(f"Error: {e}", file=sys.stderr)
