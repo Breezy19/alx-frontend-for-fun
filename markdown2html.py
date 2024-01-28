@@ -14,7 +14,8 @@ def markdown_to_html(md_file, html_file):
     """
     try:
         with open(md_file, 'r') as md, open(html_file, 'w') as html:
-            in_paragraph = False  # Track whether we're in a paragraph
+            in_list = False
+            in_paragraph = False
 
             for line in md:
                 # Convert Markdown bold and italic syntax to HTML
@@ -26,32 +27,48 @@ def markdown_to_html(md_file, html_file):
                     if in_paragraph:
                         html.write('</p>\n')
                         in_paragraph = False
+                    if in_list:
+                        html.write('</ul>\n')
+                        in_list = False
+
                     level = line.count('#')
                     content = line.strip('# \n')
                     html.write(f"<h{level}>{content}</h{level}>\n")
 
                 # Handle Markdown unordered lists
                 elif line.startswith('- '):
+                    if not in_list:
+                        if in_paragraph:
+                            html.write('</p>\n')
+                            in_paragraph = False
+                        html.write('<ul>\n')
+                        in_list = True
+                    content = line.strip('- \n')
+                    html.write(f"    <li>{content}</li>\n")
+
+                # Handle paragraphs
+                elif line.strip():
+                    if not in_paragraph:
+                        html.write('<p>\n')
+                        in_paragraph = True
+                    elif in_list:
+                        html.write('</ul>\n')
+                        in_list = False
+                    html.write(f"{line.strip()}\n")
+
+                else:
                     if in_paragraph:
                         html.write('</p>\n')
                         in_paragraph = False
-                    content = line.strip('- \n')
-                    html.write(f"<ul>\n<li>{content}</li>\n</ul>\n")
+                    if in_list:
+                        html.write('</ul>\n')
+                        in_list = False
 
-                # Handle paragraphs
-                else:
-                    if not in_paragraph and line.strip():
-                        html.write('<p>\n')
-                        in_paragraph = True
-                    if in_paragraph and line.strip():
-                        html.write(f"{line.strip()}\n")
-                    elif in_paragraph and not line.strip():
-                        html.write('</p>\n')
-                        in_paragraph = False
-
-            # Close paragraph tag if the file ends while in a paragraph
+            # Close any open tags at the end of the file
             if in_paragraph:
                 html.write('</p>\n')
+            if in_list:
+                html.write('</ul>\n')
 
     except IOError as e:
         print(f"Error: {e}", file=sys.stderr)
