@@ -1,0 +1,11 @@
+// Task: Sort the variable $list_to_sort and print the sorted list in the debug output
+
+$list_to_sort: anna carrie felicia john kim zoe;
+
+// Function to sort a list
+@function sort-list($list) {
+  @return sort($list);
+}
+
+// Output sorted list to debug
+@debug #{sort-list($list_to_sort)};
