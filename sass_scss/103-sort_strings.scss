@@ -1,10 +1,3 @@
-/* Sort the variable $list_to_sort and print the sorted list in the debug output. */
-
-// Define the list to be sorted
-$list_to_sort: john anna zoe kim felicia carrie;
-
-// Sort the list alphabetically
-$sorted_list: sort($list_to_sort);
-
-// Print the sorted list in the debug output
-@debug $sorted_list;
+/* Sass file */
+@import '103-sort_list.scss';
+@debug
