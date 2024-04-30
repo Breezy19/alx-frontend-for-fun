@@ -1,9 +1,10 @@
-/* Sass file to style button tags */
-$color0: #FF0000;
-$color1: #00FF00;
+/* Nested hover
+change button color on hover */
+
 button {
-  color: $color0;
+  color: #FF0000;
+
   &:hover {
-    color: $color1;
+      color: #00FF00;
   }
 }
